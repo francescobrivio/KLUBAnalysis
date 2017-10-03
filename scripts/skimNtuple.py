@@ -41,7 +41,8 @@ if __name__ == "__main__":
     parser.add_option ('-f', '--force'     , dest='force'     , help='replace existing reduced ntuples'      , default=False)
     parser.add_option ('-o', '--output'    , dest='output'    , help='output folder'                         , default='none')
     # parser.add_option ('-q', '--queue'     , dest='queue'     , help='batch queue'                           , default='cms')
-    parser.add_option ('-q', '--queue'     , dest='queue'     , help='batch queue'                           , default='short')
+    # parser.add_option ('-q', '--queue'     , dest='queue'     , help='batch queue'                           , default='short')
+    parser.add_option ('-q', '--queue'     , dest='queue'     , help='batch queue'                           , default='longcms')
     parser.add_option ('-r', '--resub'     , dest='resub'     , help='resubmit failed jobs'                  , default='none')
     parser.add_option ('-v', '--verb'      , dest='verb'      , help='verbose'                               , default=False)
     parser.add_option ('-s', '--sleep'     , dest='sleep'     , help='sleep in submission'                   , default=False)
@@ -207,13 +208,16 @@ if __name__ == "__main__":
         thisinputlistFile.close()
         scriptFile = open ('%s/skimJob_%d.sh'% (jobsDir,n), 'w')
         scriptFile.write ('#!/bin/bash\n')
-        scriptFile.write ('export X509_USER_PROXY=~/.t3/proxy.cert\n')
+        scriptFile.write ('echo $HOSTNAME\n')
+        #scriptFile.write ('export X509_USER_PROXY=~/.t3/proxy.cert\n')
         scriptFile.write ('source /cvmfs/cms.cern.ch/cmsset_default.sh\n')
-        scriptFile.write ('cd /data_CMS/cms/govoni/CMSSW_7_4_5/src\n')
-        scriptFile.write ('export SCRAM_ARCH=slc6_amd64_gcc472\n')
+        #scriptFile.write ('cd /data_CMS/cms/govoni/CMSSW_7_4_5/src\n')
+        #scriptFile.write ('export SCRAM_ARCH=slc6_amd64_gcc472\n')
         scriptFile.write ('eval `scram r -sh`\n')
         scriptFile.write ('cd %s\n'%currFolder)
+        scriptFile.write ('eval `scram r -sh`\n')
         scriptFile.write ('source scripts/setup.sh\n')
+
         command = skimmer + ' ' + jobsDir+"/"+listFileName + ' ' + opt.output + '/' + "output_"+str(n)+".root" + ' ' + opt.xs
         if opt.isdata :  command += ' 1 '
         else          :  command += ' 0 '    
@@ -236,7 +240,8 @@ if __name__ == "__main__":
         command += (" " + opt.klreweight + " " + opt.ktreweight + " " + opt.c2reweight + " " + opt.cgreweight + " " + opt.c2greweight)
         command += (" " + opt.susyModel)
 
-        command += ' >& ' + opt.output + '/' + "output_" + str(n) + '.log\n'
+        command += ' &>> ' + opt.output + '/' + "output_" + str(n) + '.log\n'
+        scriptFile.write ('echo $HOSTNAME &>> '+ opt.output + '/' + "output_" + str(n) + '.log\n')
         scriptFile.write (command)
         scriptFile.write ('touch ' + jobsDir + '/done_%d\n'%n)
         scriptFile.write ('echo "All done for job %d" \n'%n)
@@ -244,7 +249,8 @@ if __name__ == "__main__":
         os.system ('chmod u+rwx %s/skimJob_%d.sh'% (jobsDir,n))
 
         # command = ('/opt/exp_soft/cms/t3/t3submit -q ' + opt.queue + ' \'' + jobsDir + '/skimJob_' + str (n) + '.sh\'')
-        command = '/opt/exp_soft/cms/t3/t3submit -'+opt.queue + ' ' + jobsDir + '/skimJob_' + str (n) + '.sh'
+        # command = '/opt/exp_soft/cms/t3/t3submit -'+opt.queue + ' ' + jobsDir + '/skimJob_' + str (n) + '.sh'
+        command = '/usr/bin/qsub -q '+opt.queue + ' ' + jobsDir + '/skimJob_' + str (n) + '.sh'
         if opt.sleep : time.sleep (0.1)
         os.system (command)
         commandFile.write (command + '\n')

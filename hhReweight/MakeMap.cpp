@@ -44,7 +44,8 @@ int main ()
     // TString filename = "/home/llr/cms/cadamuro/HH2016/CMSSW_7_4_7/src/KLUBAnalysis/inputFiles/Files80X_22Giu/allhhV2nonresonant.txt";
     // TString filename = "/home/llr/cms/cadamuro/HH2016/CMSSW_7_4_7/src/KLUBAnalysis/inputFiles/Files80X_22Giu/lesshhV2nonresonant.txt";
     // TString filename = "/home/llr/cms/cadamuro/HH2016/CMSSW_7_4_7/src/KLUBAnalysis/inputFiles/Files80X_25Nov2016/filelist_allNonRes.txt";
-    TString filename = "/home/llr/cms/cadamuro/HH2016/CMSSW_7_4_7/src/KLUBAnalysis/inputFiles/Files_7Feb2016/allNonResNodes.txt";
+    // TString filename = "/home/llr/cms/cadamuro/HH2016/CMSSW_7_4_7/src/KLUBAnalysis/inputFiles/Files_7Feb2016/allNonResNodes.txt";
+    TString filename = "/gwpool/users/brivio/Hhh_1718/CMSSW_7_4_7/src/KLUBAnalysis/inputFiles/JECproduction_Lug2017/allNonResClonesBench/lista_tot.txt";
 
     TChain* ch = new TChain ("HTauTauTree/HTauTauTree");
     appendFromFileList (ch, filename);

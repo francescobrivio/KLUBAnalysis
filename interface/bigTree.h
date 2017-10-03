@@ -222,6 +222,34 @@ public :
    std::vector<int>     *PFjetID;
    std::vector<float>   *jetRawf;
    std::vector<float>   *jets_jecUnc;
+   // JEC
+   std::vector<float>   *jets_jetUnc_AbsoluteFlavMap;
+   std::vector<float>   *jets_jetUnc_AbsoluteMPFBias;
+   std::vector<float>   *jets_jetUnc_AbsoluteScale;
+   std::vector<float>   *jets_jetUnc_AbsoluteStat;
+   std::vector<float>   *jets_jetUnc_FlavorQCD;
+   std::vector<float>   *jets_jetUnc_Fragmentation;
+   std::vector<float>   *jets_jetUnc_PileUpDataMC;
+   std::vector<float>   *jets_jetUnc_PileUpPtBB;
+   std::vector<float>   *jets_jetUnc_PileUpPtEC1;
+   std::vector<float>   *jets_jetUnc_PileUpPtEC2;
+   std::vector<float>   *jets_jetUnc_PileUpPtHF;
+   std::vector<float>   *jets_jetUnc_PileUpPtRef;
+   std::vector<float>   *jets_jetUnc_RelativeBal;
+   std::vector<float>   *jets_jetUnc_RelativeFSR;
+   std::vector<float>   *jets_jetUnc_RelativeJEREC1;
+   std::vector<float>   *jets_jetUnc_RelativeJEREC2;
+   std::vector<float>   *jets_jetUnc_RelativeJERHF;
+   std::vector<float>   *jets_jetUnc_RelativePtBB;
+   std::vector<float>   *jets_jetUnc_RelativePtEC1;
+   std::vector<float>   *jets_jetUnc_RelativePtEC2;
+   std::vector<float>   *jets_jetUnc_RelativePtHF;
+   std::vector<float>   *jets_jetUnc_RelativeStatEC;
+   std::vector<float>   *jets_jetUnc_RelativeStatFSR;
+   std::vector<float>   *jets_jetUnc_RelativeStatHF;
+   std::vector<float>   *jets_jetUnc_SinglePionECAL;
+   std::vector<float>   *jets_jetUnc_SinglePionHCAL;
+   std::vector<float>   *jets_jetUnc_TimePtEta;
 
    std::vector<float>   *ak8jets_px;
    std::vector<float>   *ak8jets_py;
@@ -439,6 +467,33 @@ public :
    TBranch        *b_PFjetID;   //!
    TBranch        *b_jetRawf;   //!
    TBranch        *b_jets_jecUnc ; //!
+   TBranch        *b_jets_jetUnc_AbsoluteFlavMap;  // JEC
+   TBranch        *b_jets_jetUnc_AbsoluteMPFBias;
+   TBranch        *b_jets_jetUnc_AbsoluteScale;
+   TBranch        *b_jets_jetUnc_AbsoluteStat;
+   TBranch        *b_jets_jetUnc_FlavorQCD;
+   TBranch        *b_jets_jetUnc_Fragmentation;
+   TBranch        *b_jets_jetUnc_PileUpDataMC;
+   TBranch        *b_jets_jetUnc_PileUpPtBB;
+   TBranch        *b_jets_jetUnc_PileUpPtEC1;
+   TBranch        *b_jets_jetUnc_PileUpPtEC2;
+   TBranch        *b_jets_jetUnc_PileUpPtHF;
+   TBranch        *b_jets_jetUnc_PileUpPtRef;
+   TBranch        *b_jets_jetUnc_RelativeBal;
+   TBranch        *b_jets_jetUnc_RelativeFSR;
+   TBranch        *b_jets_jetUnc_RelativeJEREC1;
+   TBranch        *b_jets_jetUnc_RelativeJEREC2;
+   TBranch        *b_jets_jetUnc_RelativeJERHF;
+   TBranch        *b_jets_jetUnc_RelativePtBB;
+   TBranch        *b_jets_jetUnc_RelativePtEC1;
+   TBranch        *b_jets_jetUnc_RelativePtEC2;
+   TBranch        *b_jets_jetUnc_RelativePtHF;
+   TBranch        *b_jets_jetUnc_RelativeStatEC;
+   TBranch        *b_jets_jetUnc_RelativeStatFSR;
+   TBranch        *b_jets_jetUnc_RelativeStatHF;
+   TBranch        *b_jets_jetUnc_SinglePionECAL;
+   TBranch        *b_jets_jetUnc_SinglePionHCAL;
+   TBranch        *b_jets_jetUnc_TimePtEta;
    TBranch        *b_ak8jets_px;
    TBranch        *b_ak8jets_py;
    TBranch        *b_ak8jets_pz;
@@ -649,6 +704,34 @@ public :
        PFjetID = 0;
        jetRawf = 0;
        jets_jecUnc = 0;
+       // JEC
+       jets_jetUnc_AbsoluteFlavMap = 0; // 1
+       jets_jetUnc_AbsoluteMPFBias = 0;
+       jets_jetUnc_AbsoluteScale = 0;
+       jets_jetUnc_AbsoluteStat = 0;
+       jets_jetUnc_FlavorQCD = 0;       // 5
+       jets_jetUnc_Fragmentation = 0;
+       jets_jetUnc_PileUpDataMC = 0;
+       jets_jetUnc_PileUpPtBB = 0;
+       jets_jetUnc_PileUpPtEC1 = 0;
+       jets_jetUnc_PileUpPtEC2 = 0;    // 10
+       jets_jetUnc_PileUpPtHF = 0;
+       jets_jetUnc_PileUpPtRef = 0;
+       jets_jetUnc_RelativeBal = 0;
+       jets_jetUnc_RelativeFSR = 0;
+       jets_jetUnc_RelativeJEREC1 = 0; //15
+       jets_jetUnc_RelativeJEREC2 = 0;
+       jets_jetUnc_RelativeJERHF = 0;
+       jets_jetUnc_RelativePtBB = 0;
+       jets_jetUnc_RelativePtEC1 = 0;
+       jets_jetUnc_RelativePtEC2 = 0;  //20
+       jets_jetUnc_RelativePtHF = 0;
+       jets_jetUnc_RelativeStatEC = 0;
+       jets_jetUnc_RelativeStatFSR = 0;
+       jets_jetUnc_RelativeStatHF = 0;
+       jets_jetUnc_SinglePionECAL = 0; //25
+       jets_jetUnc_SinglePionHCAL = 0;
+       jets_jetUnc_TimePtEta = 0;      //27
        ak8jets_px = 0;
        ak8jets_py = 0;
        ak8jets_pz = 0;
@@ -803,7 +886,37 @@ public :
        fChain->SetBranchAddress("pfCombinedMVAV2BJetTags", &pfCombinedMVAV2BJetTags, &b_pfCombinedMVAV2BJetTags);
        fChain->SetBranchAddress("PFjetID", &PFjetID, &b_PFjetID);
        fChain->SetBranchAddress("jetRawf", &jetRawf, &b_jetRawf);
-       fChain->SetBranchAddress("jets_jecUnc", &jets_jecUnc,&b_jets_jecUnc);
+       fChain->SetBranchAddress("jets_jecUnc", &jets_jecUnc, &b_jets_jecUnc);
+
+       // JEC
+       fChain->SetBranchAddress("jets_jetUnc_AbsoluteFlavMap",   &jets_jetUnc_AbsoluteFlavMap,    &b_jets_jetUnc_AbsoluteFlavMap);
+       fChain->SetBranchAddress("jets_jetUnc_AbsoluteMPFBias",   &jets_jetUnc_AbsoluteMPFBias,    &b_jets_jetUnc_AbsoluteMPFBias);
+       fChain->SetBranchAddress("jets_jetUnc_AbsoluteScale",     &jets_jetUnc_AbsoluteScale,      &b_jets_jetUnc_AbsoluteScale);
+       fChain->SetBranchAddress("jets_jetUnc_AbsoluteStat",      &jets_jetUnc_AbsoluteStat,       &b_jets_jetUnc_AbsoluteStat);
+       fChain->SetBranchAddress("jets_jetUnc_FlavorQCD",         &jets_jetUnc_FlavorQCD,          &b_jets_jetUnc_FlavorQCD);
+       fChain->SetBranchAddress("jets_jetUnc_Fragmentation",     &jets_jetUnc_Fragmentation,      &b_jets_jetUnc_Fragmentation);
+       fChain->SetBranchAddress("jets_jetUnc_PileUpDataMC",      &jets_jetUnc_PileUpDataMC,       &b_jets_jetUnc_PileUpDataMC);
+       fChain->SetBranchAddress("jets_jetUnc_PileUpPtBB",        &jets_jetUnc_PileUpPtBB,         &b_jets_jetUnc_PileUpPtBB);
+       fChain->SetBranchAddress("jets_jetUnc_PileUpPtEC1",       &jets_jetUnc_PileUpPtEC1,        &b_jets_jetUnc_PileUpPtEC1);
+       fChain->SetBranchAddress("jets_jetUnc_PileUpPtEC2",       &jets_jetUnc_PileUpPtEC2,        &b_jets_jetUnc_PileUpPtEC2);
+       fChain->SetBranchAddress("jets_jetUnc_PileUpPtHF",        &jets_jetUnc_PileUpPtHF,         &b_jets_jetUnc_PileUpPtHF);
+       fChain->SetBranchAddress("jets_jetUnc_PileUpPtRef",       &jets_jetUnc_PileUpPtRef,        &b_jets_jetUnc_PileUpPtRef);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeBal",       &jets_jetUnc_RelativeBal,        &b_jets_jetUnc_RelativeBal);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeFSR",       &jets_jetUnc_RelativeFSR,        &b_jets_jetUnc_RelativeFSR);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeJEREC1",    &jets_jetUnc_RelativeJEREC1,     &b_jets_jetUnc_RelativeJEREC1);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeJEREC2",    &jets_jetUnc_RelativeJEREC2,     &b_jets_jetUnc_RelativeJEREC2);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeJERHF",     &jets_jetUnc_RelativeJERHF,      &b_jets_jetUnc_RelativeJERHF);
+       fChain->SetBranchAddress("jets_jetUnc_RelativePtBB",      &jets_jetUnc_RelativePtBB,       &b_jets_jetUnc_RelativePtBB);
+       fChain->SetBranchAddress("jets_jetUnc_RelativePtEC1",     &jets_jetUnc_RelativePtEC1,      &b_jets_jetUnc_RelativePtEC1);
+       fChain->SetBranchAddress("jets_jetUnc_RelativePtEC2",     &jets_jetUnc_RelativePtEC2,      &b_jets_jetUnc_RelativePtEC2);
+       fChain->SetBranchAddress("jets_jetUnc_RelativePtHF",      &jets_jetUnc_RelativePtHF,       &b_jets_jetUnc_RelativePtHF);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeStatEC",    &jets_jetUnc_RelativeStatEC,     &b_jets_jetUnc_RelativeStatEC);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeStatFSR",   &jets_jetUnc_RelativeStatFSR,    &b_jets_jetUnc_RelativeStatFSR);
+       fChain->SetBranchAddress("jets_jetUnc_RelativeStatHF",    &jets_jetUnc_RelativeStatHF,     &b_jets_jetUnc_RelativeStatHF);
+       fChain->SetBranchAddress("jets_jetUnc_SinglePionECAL",    &jets_jetUnc_SinglePionECAL,     &b_jets_jetUnc_SinglePionECAL);
+       fChain->SetBranchAddress("jets_jetUnc_SinglePionHCAL",    &jets_jetUnc_SinglePionHCAL,     &b_jets_jetUnc_SinglePionHCAL);
+       fChain->SetBranchAddress("jets_jetUnc_TimePtEta",         &jets_jetUnc_TimePtEta,          &b_jets_jetUnc_TimePtEta);
+       
        fChain->SetBranchAddress("ak8jets_px", &ak8jets_px, &b_ak8jets_px);
        fChain->SetBranchAddress("ak8jets_py", &ak8jets_py, &b_ak8jets_py);
        fChain->SetBranchAddress("ak8jets_pz", &ak8jets_pz, &b_ak8jets_pz);
