@@ -2178,13 +2178,13 @@ int main (int argc, char** argv)
         theBigTree.jets_pz->at (bjet1idx),
         theBigTree.jets_e->at  (bjet1idx)
       ) ;
-      double JEC_unc_first  = theBigTree.jets_jetUnc_TimePtEta->at (bjet1idx);
+      /*double JEC_unc_first  = theBigTree.jets_jetUnc_AbsoluteFlavMap->at (bjet1idx);
       tlv_firstBjet.SetPtEtaPhiE(
-        (1.-JEC_unc_first) *tlv_firstBjet.Pt(),
+        (1.+JEC_unc_first) *tlv_firstBjet.Pt(),
         tlv_firstBjet.Eta(),
         tlv_firstBjet.Phi(),
-        (1.-JEC_unc_first) *tlv_firstBjet.E()
-      ) ;
+        (1.+JEC_unc_first) *tlv_firstBjet.E()
+      ) ;*/
       
       TLorentzVector tlv_secondBjet 
       (
@@ -2193,13 +2193,13 @@ int main (int argc, char** argv)
         theBigTree.jets_pz->at (bjet2idx),
         theBigTree.jets_e->at  (bjet2idx)
       ) ;
-      double JEC_unc_second = theBigTree.jets_jetUnc_TimePtEta->at (bjet2idx);
+      /*double JEC_unc_second = theBigTree.jets_jetUnc_AbsoluteFlavMap->at (bjet2idx);
       tlv_secondBjet.SetPtEtaPhiE(
-        (1.-JEC_unc_second) *tlv_secondBjet.Pt(),
+        (1.+JEC_unc_second) *tlv_secondBjet.Pt(),
         tlv_secondBjet.Eta(),
         tlv_secondBjet.Phi(),
-        (1.-JEC_unc_second) *tlv_secondBjet.E()
-      ) ;
+        (1.+JEC_unc_second) *tlv_secondBjet.E()
+      ) ;*/
 
       double ptRegr[2] = {tlv_firstBjet.Pt(), tlv_secondBjet.Pt()};
       if (computeBregr)
