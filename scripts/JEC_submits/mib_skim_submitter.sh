@@ -1,11 +1,11 @@
-OUTDIRR="Skims2017_26Lug_JEC_jecUnc"
+OUTDIRR="Skims2017_Dec18"
 
-INPUTDIR="inputFiles/JECproduction_Lug2017"
-SKIMDIR="/gwteraz/users/brivio/SKIMMED_JEC"
+INPUTDIR="inputFiles/VBF_study"
+SKIMDIR="/gwpool/users/brivio/Hhh_1718/VBF_studies"
 
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 source scripts/setup.sh
-mkdir /gwteraz/users/brivio/SKIMMED_JEC/$OUTDIRR/
+mkdir /gwteraz/users/brivio/SKIMMED_VBF/$OUTDIRR/
 mkdir $OUTDIRR
 cp /gwpool/users/brivio/Hhh_1718/CMSSW_7_4_7/src/KLUBAnalysis/scripts/haddAll.sh /gwteraz/users/brivio/SKIMMED_JEC/$OUTDIRR/
 
