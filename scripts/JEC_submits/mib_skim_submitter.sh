@@ -11,7 +11,7 @@ mkdir /gwteraz/users/brivio/SKIMMED_VBF/$OUTDIRR/
 mkdir $OUTDIRR
 cp /gwpool/users/brivio/Hhh_1718/CMSSW_7_4_7/src/KLUBAnalysis/scripts/haddAll.sh /gwteraz/users/brivio/SKIMMED_VBF/$OUTDIRR/
 
-
+<<COMMENT1
 echo "----- BEGIN -----" >> log.txt
 
 # VBF signals
@@ -20,58 +20,59 @@ echo "Submitting - VBF SIGNALS - " >> log.txt
 echo "OUTDIR = $OUTDIRR"
 echo "OUTDIR = $OUTDIRR" >> log.txt
 
-python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 1 -k True -o $SKIMDIR/$OUTDIRR/VBFHHTo2B2Tau_111 -i $INPUTDIR_VBF/1_VBFHHTo2B2Tau_CV_1_C2V_1_C3_1_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1.txt -x 1.0 -a True
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 7 -k True -o $SKIMDIR/$OUTDIRR/VBFHHTo2B2Tau_111 -i $INPUTDIR_VBF/1_VBFHHTo2B2Tau_CV_1_C2V_1_C3_1_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1.txt -x 1.0 -a True
 
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 2 -k True -o $SKIMDIR/$OUTDIRR/VBFHHTo2B2Tau_121 -i $INPUTDIR_VBF/2_VBFHHTo2B2Tau_CV_1_C2V_2_C3_1_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1.txt -x 1.0 -a True
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 7 -k True -o $SKIMDIR/$OUTDIRR/VBFHHTo2B2Tau_121 -i $INPUTDIR_VBF/2_VBFHHTo2B2Tau_CV_1_C2V_2_C3_1_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1.txt -x 1.0 -a True
 
 # ggH signals
-#echo "Submitting - ggH SIGNALS - "
-#echo "Submitting - ggH SIGNALS - " >> log.txt
-#echo "OUTDIR = $OUTDIRR"
-#echo "OUTDIR = $OUTDIRR" >> log.txt
+echo "Submitting - ggH SIGNALS - "
+echo "Submitting - ggH SIGNALS - " >> log.txt
+echo "OUTDIR = $OUTDIRR"
+echo "OUTDIR = $OUTDIRR" >> log.txt
 
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 2 -k True -o $SKIMDIR/$OUTDIRR/SKIM_GluGluToRadionToHHTo2B2Tau_M-300 -i $INPUTDIR/84_GluGluToRadionToHHTo2B2Tau_M-300_narrow_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1.txt -x 1.0 -a True
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c  config/skim_2017.cfg -n 2 -k True -o $SKIMDIR/$OUTDIRR/SKIM_GluGluToRadionToHHTo2B2Tau_M-900 -i $INPUTDIR/93_GluGluToRadionToHHTo2B2Tau_M-900_narrow_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1.txt -x 1.0 -a True
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 7 -k True -o $SKIMDIR/$OUTDIRR/SKIM_GluGluToRadionToHHTo2B2Tau_M-300 -i $INPUTDIR/84_GluGluToRadionToHHTo2B2Tau_M-300_narrow_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1.txt -x 1.0 -a True
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c  config/skim_2017.cfg -n 7 -k True -o $SKIMDIR/$OUTDIRR/SKIM_GluGluToRadionToHHTo2B2Tau_M-900 -i $INPUTDIR/93_GluGluToRadionToHHTo2B2Tau_M-900_narrow_13TeV-madgraph__RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1.txt -x 1.0 -a True
 
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 5 -k False -o $SKIMDIR/$OUTDIRR/SKIM_HH_benchmark_newSM -i $INPUTDIR/allNonResClonesBench/filelist_bench_newSM.txt -x 1.0  --kl 1.0 --kt 1.0 --c2 0.0 --cg 0.0 --c2g  0.0
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 7 -k False -o $SKIMDIR/$OUTDIRR/SKIM_HH_benchmark_newSM -i $INPUTDIR/allNonResClonesBench/filelist_bench_newSM.txt -x 1.0  --kl 1.0 --kt 1.0 --c2 0.0 --cg 0.0 --c2g  0.0
 
 # DY
-#echo "Submitting - DY - "
-#echo "Submitting - DY - " >> log.txt
-#echo "OUTDIR = $OUTDIRR"
-#echo "OUTDIR = $OUTDIRR" >> log.txt
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 120 -k True -o $SKIMDIR/$OUTDIRR/SKIM_DY -i $INPUTDIR/DY_mergedList.txt -g True -x 5765.4
+echo "Submitting - DY - "
+echo "Submitting - DY - " >> log.txt
+echo "OUTDIR = $OUTDIRR"
+echo "OUTDIR = $OUTDIRR" >> log.txt
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 40 -k True -o $SKIMDIR/$OUTDIRR/SKIM_DY -i $INPUTDIR/DY_mergedList.txt -g True -x 5765.4
 
 # Wjets
-#echo "Submitting - WJets - "
-#echo "Submitting - WJets - " >> log.txt
-#echo "OUTDIR = $OUTDIRR"
-#echo "OUTDIR = $OUTDIRR" >> log.txt
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 70 -k True -o $SKIMDIR/$OUTDIRR/SKIM_WJets_HT_100_200 -i $INPUTDIR/WJetsHT-100-200.txt -y 1.213784 -x 1345
+echo "Submitting - WJets - "
+echo "Submitting - WJets - " >> log.txt
+echo "OUTDIR = $OUTDIRR"
+echo "OUTDIR = $OUTDIRR" >> log.txt
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 40 -k True -o $SKIMDIR/$OUTDIRR/SKIM_WJets_HT_100_200 -i $INPUTDIR/WJetsHT-100-200.txt -y 1.213784 -x 1345
 
 # TT had
-#echo "Submitting - TThad - "
-#echo "Submitting - TThad - " >> log.txt
-#echo "OUTDIR = $OUTDIRR"
-#echo "OUTDIR = $OUTDIRR" >> log.txt
+echo "Submitting - TThad - "
+echo "Submitting - TThad - " >> log.txt
+echo "OUTDIR = $OUTDIRR"
+echo "OUTDIR = $OUTDIRR" >> log.txt
 
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 220 -k True -o $SKIMDIR/$OUTDIRR/SKIM_TT_fullyHad -i $INPUTDIR/TT_powheg_fullyHad.txt -x 380.1143 -t True -b 1
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 44 -k True -o $SKIMDIR/$OUTDIRR/SKIM_TT_fullyHad -i $INPUTDIR/TT_powheg_fullyHad.txt -x 380.1143 -t True -b 1
 
 # TT lep
-#echo "Submitting - TTlep - "
-#echo "Submitting - TTlep - " >> log.txt
-#echo "OUTDIR = $OUTDIRR"
-#echo "OUTDIR = $OUTDIRR" >> log.txt
+echo "Submitting - TTlep - "
+echo "Submitting - TTlep - " >> log.txt
+echo "OUTDIR = $OUTDIRR"
+echo "OUTDIR = $OUTDIRR" >> log.txt
 
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 220 -k True -o $SKIMDIR/$OUTDIRR/SKIM_TT_fullyLep -i $INPUTDIR/TT_powheg_fullyLep.txt -x 87.3348  -t True -b 4
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 44 -k True -o $SKIMDIR/$OUTDIRR/SKIM_TT_fullyLep -i $INPUTDIR/TT_powheg_fullyLep.txt -x 87.3348  -t True -b 4
+COMMENT1
 
 # TT semi
-#echo "Submitting - TTsemi - "
-#echo "Submitting - TTsemi - " >> log.txt
-#echo "OUTDIR = $OUTDIRR"
-#echo "OUTDIR = $OUTDIRR" >> log.txt
+echo "Submitting - TTsemi - "
+echo "Submitting - TTsemi - " >> log.txt
+echo "OUTDIR = $OUTDIRR"
+echo "OUTDIR = $OUTDIRR" >> log.txt
 
-#python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 220 -k True -o $SKIMDIR/$OUTDIRR/SKIM_TT_semiLep -i $INPUTDIR/TT_powheg_semiLep.txt -x 364.3108 -t True -b 5
+python scripts/skimNtuple.py -T $OUTDIRR -s True -c config/skim_2017.cfg -n 44 -k True -o $SKIMDIR/$OUTDIRR/SKIM_TT_semiLep -i $INPUTDIR/TT_powheg_semiLep.txt -x 364.3108 -t True -b 5
 
 
 
