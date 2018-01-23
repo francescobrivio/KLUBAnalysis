@@ -85,7 +85,7 @@ class configReader:
                 f = re.split('\W+',line)
                 #print f
                 section = f[1]
-                print section
+                print "section: ", section
                 continue
             if section is not "histos":
                 if section is not "cardmaker" : f = re.split('\W+',line)

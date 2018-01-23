@@ -331,13 +331,15 @@ for il in range(len(input.signals)) :
 	input.signals[il] = input.signals[il].replace("lambdarew","ggHH_bbtt")	
 	input.signals[il] = input.signals[il].replace("bidimrew","ggHH_bbtt")	
 for theLambda in input.signals:
-	if not lambdaName in theLambda : 
+	if not lambdaName in theLambda :
+		print "continuing"
 		continue
 	for sel in allSel : 
 		#if not "lambda" in theLambda and not "Radion" in theLambda : continue
-#		if opt.isResonant :
-#			if not "Radion" in theLambda : continue
-#		else :
-#			if not "ggHH_bbtt" in theLambda : continue
-	    for ireg in range(-1,3) :
+		#		if opt.isResonant :
+		#			if not "Radion" in theLambda : continue
+		#		else :
+		#			if not "ggHH_bbtt" in theLambda : continue
+		print "sel: ", sel
+		for ireg in range(-1,3) :
 			writeCard(input,theLambda,sel,ireg)
