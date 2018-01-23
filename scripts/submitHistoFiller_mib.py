@@ -7,6 +7,8 @@
 # python scripts/submitHistoFiller_mib.py --cfg config/mainCfg_ETau_JEC.cfg   --tag et_jecUnc_nominal
 # python scripts/submitHistoFiller_mib.py --cfg config/mainCfg_TauTau_JEC.cfg --tag tt_jecUnc_nominal
 #
+# python scripts/submitHistoFiller_mib.py --cfg config/mainCfg_VBF_TauTau.cfg --tag VBF_TauTau_12Gen18 --njobs 40
+#
 ################
 
 import os
@@ -29,7 +31,9 @@ if not args.cfg:
 outDir = datetime.datetime.now().strftime('%Y.%m.%d_%H.%M.%S')
 if args.tag:
     outDir = args.tag
-outDir = "JEC_jobs_pt25/"+outDir
+#outDir = "JEC_jobs_pt25/"+outDir
+#outDir = "outPlotterFiles/"+outDir
+outDir = "outPlotterLogs/"+outDir
 
 # pathname = os.path.dirname(sys.argv[0])        
 # here     = os.path.abspath(pathname)
@@ -61,7 +65,7 @@ for nj in range(0, args.njobs):
     
     os.system ('chmod u+rwx ' + outDir + '/' + scriptName)
     #launchcommand = ('/opt/exp_soft/cms/t3/t3submit -short \'' + outDir + '/' + scriptName +"\'")
-    launchcommand = ('/usr/bin/qsub -q  longcms ' + outDir + '/' + scriptName)
+    launchcommand = ('/usr/bin/qsub -q longcms ' + outDir + '/' + scriptName)
     print launchcommand
     os.system (launchcommand)
     # command = '/opt/exp_soft/cms/t3/t3submit -short ' + outDir + '/' + proto + str (nj) + '.sh'

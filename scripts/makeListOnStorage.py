@@ -4,12 +4,13 @@ from subprocess import Popen, PIPE
 #tag = "MC_Radion300_28Giu2017"
 #tag = "Legacy_Radion300_Lug2017"
 #tag = "Hhh_JEC2017"
-tag = "Hhh_VBFstudy"
-
+#tag = "Hhh_VBFstudy"
+tag = "Tau_Data2016_22Dec2017"
 
 #outFolder = '../inputFiles/LegacyProduction_Lug2017/'
 #outFolder = '../inputFiles/JECproduction_Lug2017/'
-outFolder = '../inputFiles/VBF_study/'
+#outFolder = '../inputFiles/VBF_study/'
+outFolder = '../inputFiles/TauData2016/'
 
 areEnrichedMiniAOD = False; # if true:  add a header and the /store.. etc to run ntuplizer on Tier3 on CMSSW
                                  # if false: only add the polgrid server to run the skim and submit on root
@@ -51,15 +52,15 @@ print useOnly
 
 
 #dpmhome = "/dpm/in2p3.fr/home/cms/trivcat"
-#dpmhome = "/gwteras/cms"
-dpmhome = "/gwteraz/users"
+dpmhome = "/gwteras/cms"
+#dpmhome = "/gwteraz/users"
 
 #partialPath = "/store/user/lcadamur/HHNtuples/" #folder contenente la produzione
 # partialPath = "/store/user/salerno/HHNtuples/"
 #partialPath = "/store/user/davignon/EnrichedMiniAOD/"
 #partialPath = "/store/user/gortona/HHNtuples/"
-#partialPath = "/store/user/fbrivio/Hhh_1718/"
-partialPath = "/brivio/"
+partialPath = "/store/user/fbrivio/Hhh_1718/"
+#partialPath = "/brivio/"
 
 path = dpmhome + partialPath + tag
 if outFolder[-1] != "/": outFolder += '/'

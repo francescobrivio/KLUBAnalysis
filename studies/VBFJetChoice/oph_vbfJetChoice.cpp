@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <bitset>
+#include <tuple>
 #include "TTree.h"
 #include "TH1F.h"
 #include "TH2F.h"
@@ -12,10 +13,17 @@
 #include "TLorentzVector.h"
 
 #include "bigTree.h" 
+#include "OfflineProducerHelper.h"
 
 using namespace std;
 
-// c++ -lm -o newbJetChoice newbJetChoice.cpp `root-config --glibs --cflags` -I ../../interface/
+enum sortingStrategy {
+kLLRFramDefault = 0, // taking order from LLR framework <--> ordered by MVA ID
+kHTauTau = 1,        // using HTauTau of lowest iso on 1st candidate, including (A,B) and (B,A)
+kPtAndRawIso = 2     // order each pair leg by pt (ptA > ptB), then compare *raw* iso of first leg
+};
+
+// c++ -lm -o oph_vbfJetChoice oph_vbfJetChoice.cpp ../../src/OfflineProducerHelper.cc `root-config --glibs --cflags` -I ../../interface/
 
 void appendFromFileList (TChain* chain, TString filename)
 {
@@ -105,223 +113,40 @@ pair<int,int> getETApair(vector<pair<TLorentzVector, int> > cleaned_jets)
 }
 
 
-
 /// FUNCITONS FOR TAU PAIR CHOICE
-bool CheckPassTau (bigTree* theBigTree, int iDau, float ptMin, float etaMax, int againstEleWP, int againstMuWP, float isoRaw3Hits)
+int GetEventType (bigTree* theBigTree, OfflineProducerHelper* oph)
 {
-    TLorentzVector p4 (theBigTree->daughters_px->at(iDau), theBigTree->daughters_py->at(iDau), theBigTree->daughters_pz->at(iDau), theBigTree->daughters_e->at(iDau));
+    ULong64_t debugEvent = -1;
+    string leptonSelectionFlag = "Vertex-LepID-pTMin-etaMax-againstEle-againstMu";
+    int sortStrategyThTh = 1;
 
-    if (againstEleWP < 0 || againstEleWP > 4) {
-        cout << " ** OfflineProducerHelper::tauBaseline: againstEleWP must be between 0 and 4 --> using 0" << endl;
-        againstEleWP = 0;
-    } 
-
-    if (againstMuWP < 0 || againstMuWP > 1) {
-        cout << " ** OfflineProducerHelper::tauBaseline: againstMuWP must be between 0 and 1 --> using 0" << endl;
-        againstMuWP = 0;
-    }
+    if (theBigTree->indexDau1->size () == 0) return -1;  //continue;
     
-    bool dmfS = (theBigTree->daughters_decayModeFindingOldDMs->at(iDau) == 1);
-    bool vertexS = (fabs(theBigTree->dz->at(iDau)) < 0.2);
-    bool isoS = (theBigTree->daughters_byCombinedIsolationDeltaBetaCorrRaw3Hits->at(iDau) < isoRaw3Hits);
-    bool ptS = (p4.Pt() > ptMin);
-    bool etaS = (fabs(p4.Eta()) < etaMax);
-    bool totalS = (dmfS && vertexS && isoS && ptS && etaS);
-
-    return totalS;
-}
-
-
-
-bool CheckPassMu (bigTree* theBigTree, int iDau)
-{
-    TLorentzVector p4 (theBigTree->daughters_px->at(iDau), theBigTree->daughters_py->at(iDau), theBigTree->daughters_pz->at(iDau), theBigTree->daughters_e->at(iDau));
-    int discr = theBigTree->daughters_muonID->at(iDau);
-
-    bool idS = CheckBit (discr, 3); // bit 0 is LOOSE id, bit 2 is MEDIUM mu id, bit 3 is TIGHT mu id
-    bool isoS = (theBigTree->combreliso->at(iDau) < 0.15);
-    bool ptS = (p4.Pt() > 23.);
-    bool etaS = (fabs(p4.Eta()) < 2.1);
-    
-    return (idS && isoS && ptS && etaS);
-}
-
-bool CheckPassMu10 (bigTree* theBigTree, int iDau)
-{
-    TLorentzVector p4 (theBigTree->daughters_px->at(iDau), theBigTree->daughters_py->at(iDau), theBigTree->daughters_pz->at(iDau), theBigTree->daughters_e->at(iDau));
-    int discr = theBigTree->daughters_muonID->at(iDau);
-
-    bool idS = CheckBit (discr, 3); // bit 0 is LOOSE id, bit 2 is MEDIUM mu id, bit 3 is TIGHT mu id
-    bool isoS = (theBigTree->combreliso->at(iDau) < 0.15);
-    bool ptS = (p4.Pt() > 10.);
-    bool etaS = (fabs(p4.Eta()) < 2.4);
-    
-    return (idS && isoS && ptS && etaS);
-}
-
-bool CheckPassEle (bigTree* theBigTree, int iDau)
-{
-    TLorentzVector p4 (theBigTree->daughters_px->at(iDau), theBigTree->daughters_py->at(iDau), theBigTree->daughters_pz->at(iDau), theBigTree->daughters_e->at(iDau));
-
-    bool isoS = (theBigTree->combreliso->at(iDau) < 0.1);
-    bool ptS = (p4.Pt() > 27.);
-    bool etaS = (fabs(p4.Eta()) < 2.1);
-    bool idS = theBigTree->daughters_iseleBDT->at(iDau); // use it in ntuples produced after 11 June 2015, contains tight WP bool
-    
-    return (idS && isoS && ptS && etaS);
-}
-
-bool CheckPassEle10 (bigTree* theBigTree, int iDau)
-{
-    TLorentzVector p4 (theBigTree->daughters_px->at(iDau), theBigTree->daughters_py->at(iDau), theBigTree->daughters_pz->at(iDau), theBigTree->daughters_e->at(iDau));
-
-    bool isoS = (theBigTree->combreliso->at(iDau) < 0.1);
-    bool ptS = (p4.Pt() > 10.);
-    bool etaS = (fabs(p4.Eta()) < 2.5);
-    bool idS = theBigTree->daughters_iseleBDT->at(iDau); // use it in ntuples produced after 11 June 2015, contains tight WP bool
-    
-    return (idS && isoS && ptS && etaS);
-}
-
-
-int getPairType (int type1, int type2)
-{
     int nmu = 0;
-    int nele = 0;
-    int ntau = 0;
-    
-    if (type1 == 0) nmu++;
-    if (type1 == 1) nele++;
-    if (type1 == 2) ntau++;
-
-    if (type2 == 0) nmu++;
-    if (type2 == 1) nele++;
-    if (type2 == 2) ntau++;
-
-    if (nmu == 1 && nele == 0 && ntau == 1) return 0; //(int) pairType::MuHad;
-    if (nmu == 0 && nele == 1 && ntau == 1) return 1; //(int) pairType::EHad;
-    if (nmu == 0 && nele == 0 && ntau == 2) return 2; //(int) pairType::HadHad;
-    if (nmu == 2 && nele == 0 && ntau == 0) return 3; //(int) pairType::MuMu;
-    if (nmu == 0 && nele == 2 && ntau == 0) return 4; //(int) pairType::EE;
-    if (nmu == 1 && nele == 1 && ntau == 0) return 5; //(int) pairType::EMu;
-    
-    return -1;
-}
-
-float DeltaRDau(bigTree* tree, int dau1idx, int dau2idx)
-{
-  TLorentzVector v1, v2;
-  v1.SetPxPyPzE (tree->daughters_px->at(dau1idx), tree->daughters_py->at(dau1idx), tree->daughters_pz->at(dau1idx), tree->daughters_e->at(dau1idx));
-  v2.SetPxPyPzE (tree->daughters_px->at(dau2idx), tree->daughters_py->at(dau2idx), tree->daughters_pz->at(dau2idx), tree->daughters_e->at(dau2idx));
-  return v1.DeltaR(v2);
-}
-
-
-bool pairPassBaseline (bigTree* tree, int iPair)
-{
-    int dau1index = tree->indexDau1->at(iPair);
-    int dau2index = tree->indexDau2->at(iPair);
-    int type1 = tree->particleType->at(dau1index);
-    int type2 = tree->particleType->at(dau2index);
-    int pairType = getPairType (type1, type2);
-    
-    float dR = DeltaRDau(tree, dau1index, dau2index);
-    bool drMin = (dR > 0.1);
-
-    bool isOS = tree->isOSCand->at(iPair);
-
-    // pairs are always ordered as: e mu | e tau | mu tau  (e < mu < tau)
-    // if same type of particle, highest pt one is the first
-    bool leg1=false;
-    bool leg2=false;
-    if (pairType == 0)
-    {
-        //float tauIso = whatApply.Contains("TauRlxIzo") ? 7.0 : 3.0 ;
-        leg1 = CheckPassMu (tree, dau1index);
-        leg2 = CheckPassTau (tree, dau2index, 20., 2.3, 0, 1, 3.0);
-        //leg2 = tauBaseline  (tree, dau2index, 20., 2.3, aeleVLoose, amuTight, tauIso, whatApply, debug);
-    }
-
-    if (pairType == 1)
-    {
-        //float tauIso = whatApply.Contains("TauRlxIzo") ? 7.0 : 3.0 ;
-        leg1 = CheckPassEle (tree, dau1index);
-        leg2 = CheckPassTau (tree, dau2index, 20., 2.3, 0, 1, 3.0);
-        //leg2 = tauBaseline  (tree, dau2index, 20., 2.3, aeleTight, amuLoose, tauIso, whatApply, debug);
-    }
-
-    // ordered by pT and not by most isolated, but baseline asked in sync is the same...
-    if (pairType == 2)
-    {
-        //float tauIso = whatApply.Contains("TauRlxIzo") ? 7.0 : 2.0 ;
-        leg1 = CheckPassTau (tree, dau2index, 40., 2.1, 0, 1, 2.0);
-        //leg1 = tauBaseline (tree, dau1index, 40., 2.1, aeleVLoose, amuLoose, tauIso, whatApply, debug);
-        leg2 = CheckPassTau (tree, dau2index, 40., 2.1, 0, 1, 2.0);
-        //leg2 = tauBaseline (tree, dau2index, 40., 2.1, aeleVLoose, amuLoose, tauIso, whatApply, debug);
-    }
-
-    if (pairType == 5)
-    {
-        leg1 = CheckPassEle  (tree, dau1index);
-        leg2 = CheckPassMu10 (tree, dau2index);
-    }
-
-    // e e, mu mu are still preliminary (not from baseline)
-    if (pairType == 4)
-    {
-      leg1 = CheckPassEle (tree, dau1index);
-      leg2 = CheckPassEle (tree, dau2index);
-    }
-
-    if (pairType == 3)
-    {
-      leg1 = CheckPassMu10 (tree, dau1index);
-      leg2 = CheckPassMu10 (tree, dau2index);
-      bool leg1ER = CheckPassMu (tree, dau1index);
-      bool leg2ER = CheckPassMu (tree, dau2index);
-      
-      return ( ((leg1ER && leg2) || (leg2ER && leg1)) && drMin );
-    }
-
-    bool result = (leg1 && leg2);
-    result = (result && drMin);
-
-    return result;
-}
-
-
-
-int GetEvtType (bigTree* theBigTree)
-{
-    int pairType = -22;
-    if (theBigTree->indexDau1->size () == 0)
-    {/*cout << "no leptons found!"<<endl;*/ return pairType;}  //continue;
-
-    int nmu = 0;
-    int nmu10 = 0;
+    int nmu10 = 0; // low pt muons for DY sideband, not entering in nmu
     int nele = 0;
     int nele10 = 0;
+
     for (unsigned int idau = 0; idau < theBigTree->daughters_px->size(); ++idau)
     {
         int dauType = theBigTree->particleType->at(idau);
-        if (dauType == 0)
+        if (oph->isMuon(dauType))
         {
-            bool passMu   = CheckPassMu   (theBigTree, idau);
-            bool passMu10 = CheckPassMu10 (theBigTree, idau);
+            bool passMu = oph->muBaseline (theBigTree, idau, 23., 2.1, 0.15, OfflineProducerHelper::MuTight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
+            bool passMu10 = oph->muBaseline(theBigTree, idau, 10., 2.4, 0.15, OfflineProducerHelper::MuTight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
             if (passMu) ++nmu;
             else if (passMu10) ++nmu10;
         }
-        else if (dauType == 1)
+        else if (oph->isElectron(dauType))
         {
-            bool passEle   = CheckPassEle   (theBigTree, idau);
-            bool passEle10 = CheckPassEle10 (theBigTree, idau);
+            bool passEle   = oph->eleBaseline (theBigTree, idau, 27., 2.1, 0.1, OfflineProducerHelper::EMVATight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
+            bool passEle10 = oph->eleBaseline (theBigTree, idau, 10., 2.5, 0.1, OfflineProducerHelper::EMVATight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
             if (passEle) ++nele;
             else if (passEle10) ++nele10;
         }
-        
     }
-
-    pairType = 2; // tau tau
+ 
+    int pairType = 2; // tau tau
     if (nmu > 0)
     {
       if (nmu == 1 && nmu10 == 0)
@@ -332,44 +157,46 @@ int GetEvtType (bigTree* theBigTree)
     else if (nele > 0)
     {
       if (nele == 1 && nele10 == 0)
-        pairType = 1;
+        pairType = 1;  // ele tau
       else
         pairType = 4 ; // ele ele
     }
-    //cout << "pairtype: " << pairType << endl;
+
     return pairType;
 }
 
-pair<int,int> GetLeptonsPair (bigTree* theBigTree)
+pair<int,int> GetLeptonsPair (bigTree* theBigTree, OfflineProducerHelper* oph)
 {
+    ULong64_t debugEvent = -1;
+    string leptonSelectionFlag = "Vertex-LepID-pTMin-etaMax-againstEle-againstMu";
+    int sortStrategyThTh = 1;
 
-    if (theBigTree->indexDau1->size () == 0)
-    {/*cout << "no leptons found!"<<endl;*/ return make_pair(-1,-1);}  //continue;
-
+    if (theBigTree->indexDau1->size () == 0) 
+    {return make_pair(-1,-1);}  //continue;
     int nmu = 0;
-    int nmu10 = 0;
+    int nmu10 = 0; // low pt muons for DY sideband, not entering in nmu
     int nele = 0;
     int nele10 = 0;
+
     for (unsigned int idau = 0; idau < theBigTree->daughters_px->size(); ++idau)
     {
         int dauType = theBigTree->particleType->at(idau);
-        if (dauType == 0)
+        if (oph->isMuon(dauType))
         {
-            bool passMu   = CheckPassMu   (theBigTree, idau);
-            bool passMu10 = CheckPassMu10 (theBigTree, idau);
+            bool passMu = oph->muBaseline (theBigTree, idau, 23., 2.1, 0.15, OfflineProducerHelper::MuTight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
+            bool passMu10 = oph->muBaseline(theBigTree, idau, 10., 2.4, 0.15, OfflineProducerHelper::MuTight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
             if (passMu) ++nmu;
             else if (passMu10) ++nmu10;
         }
-        else if (dauType == 1)
+        else if (oph->isElectron(dauType))
         {
-            bool passEle   = CheckPassEle   (theBigTree, idau);
-            bool passEle10 = CheckPassEle10 (theBigTree, idau);
+            bool passEle   = oph->eleBaseline (theBigTree, idau, 27., 2.1, 0.1, OfflineProducerHelper::EMVATight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
+            bool passEle10 = oph->eleBaseline (theBigTree, idau, 10., 2.5, 0.1, OfflineProducerHelper::EMVATight, string("All") , (theBigTree->EventNumber == debugEvent ? true : false)) ;
             if (passEle) ++nele;
             else if (passEle10) ++nele10;
         }
-        
     }
-
+ 
     int pairType = 2; // tau tau
     if (nmu > 0)
     {
@@ -385,36 +212,80 @@ pair<int,int> GetLeptonsPair (bigTree* theBigTree)
       else
         pairType = 4 ; // ele ele
     }
-    //cout << "pairtype: " << pairType << endl;
+    // ----------------------------------------------------------
+    // choose the first pair passing baseline and being of the right pair type
 
     int chosenTauPair = -1;
 
-    // (mu tauh), (e tauh), (tauhtauh && kLLRFramDefault)
-    for (unsigned int iPair = 0 ; iPair < theBigTree->indexDau1->size () ; ++iPair)
+    if (pairType == 2 && sortStrategyThTh == kHTauTau)
     {
-      int t_firstDaughterIndex  = theBigTree->indexDau1->at (iPair) ;
-      int t_secondDaughterIndex = theBigTree->indexDau2->at (iPair) ;
-      int t_type1 = theBigTree->particleType->at (t_firstDaughterIndex) ;
-      int t_type2 = theBigTree->particleType->at (t_secondDaughterIndex) ;        
-      if ( getPairType (t_type1, t_type2) != pairType ) continue ;
-      if ( pairPassBaseline (theBigTree, iPair) ) // rlx izo to limit to tau iso < 7 -- good for sideband
+      chosenTauPair = oph->getBestPairHTauTau(theBigTree, leptonSelectionFlag, (theBigTree->EventNumber == debugEvent ? true : false));
+    }
+
+    else if (pairType == 2 && sortStrategyThTh == kPtAndRawIso)
+    {
+      chosenTauPair = oph->getBestPairPtAndRawIsoOrd(theBigTree, leptonSelectionFlag, (theBigTree->EventNumber == debugEvent ? true : false));
+    }
+
+    // (mu tauh), (e tauh), (tauhtauh && kLLRFramDefault)
+    else
+    {
+      for (unsigned int iPair = 0 ; iPair < theBigTree->indexDau1->size () ; ++iPair)
       {
-          chosenTauPair = iPair;
-          break;          
+          int t_firstDaughterIndex  = theBigTree->indexDau1->at (iPair) ;
+          int t_secondDaughterIndex = theBigTree->indexDau2->at (iPair) ;
+          int t_type1 = theBigTree->particleType->at (t_firstDaughterIndex) ;
+          int t_type2 = theBigTree->particleType->at (t_secondDaughterIndex) ;
+          if ( oph->getPairType (t_type1, t_type2) != pairType ) continue ;
+          string baselineSels = ( (pairType <= 2) ? leptonSelectionFlag : (leptonSelectionFlag + "-Iso")) ; // for ee, mumu, emu, ask isolation in baseline
+          if ( oph->pairPassBaseline (theBigTree, iPair, baselineSels, (theBigTree->EventNumber == debugEvent ? true : false) ) ) // rlx izo to limit to tau iso < 7 -- good for sideband
+          {
+              chosenTauPair = iPair;
+              break;          
+          }
       }
     }
-    if (chosenTauPair < 0) {/*cout<<"No chosen pair"<<endl;*/ return make_pair(-1,-1);} //continue; // no pair found over baseline
+
+    if (chosenTauPair < 0) { return make_pair(-1,-1);} //if (chosenTauPair < 0) continue; // no pair found over baseline
 
     const int firstDaughterIndex  = theBigTree->indexDau1->at (chosenTauPair) ;
     const int secondDaughterIndex = theBigTree->indexDau2->at (chosenTauPair) ;
     
     return make_pair(firstDaughterIndex, secondDaughterIndex);
 }
-/// END functions for tau pair choice
 
 
 
 
+
+// open the first file in the input list, retrieve the histogram "Counters" for the trigger names and return a copy of it
+TH1F* getFirstFileHisto (TString filename, bool isForTriggers=true)
+{
+    std::ifstream infile(filename.Data());
+    std::string line;
+    while (std::getline(infile, line))
+    {
+        line = line.substr(0, line.find("#", 0)); // remove comments introduced by #
+        while (line.find(" ") != std::string::npos) line = line.erase(line.find(" "), 1); // remove white spaces
+        while (line.find("\n") != std::string::npos) line = line.erase(line.find("\n"), 1); // remove new line characters
+        while (line.find("\r") != std::string::npos) line = line.erase(line.find("\r"), 1); // remove carriage return characters
+        if (!line.empty()) // skip empty lines
+          break;
+    }
+    
+    TFile* fIn = TFile::Open (line.c_str());
+    TH1F* dummy = (TH1F*) fIn->Get ("HTauTauTree/Counters");
+    TString name = "Counters_perTrigger";
+    if(!isForTriggers) {
+      dummy = (TH1F*) fIn->Get ("HTauTauTree/TauIDs");
+      name = "Counters_pertauID";
+    }
+    TH1F* histo = new TH1F (*dummy);
+    histo-> SetDirectory(0);
+    histo->SetName (name.Data());
+    fIn->Close();
+    return histo;
+}
 
 // ---------- ---- ------------
 // ---------- MAIN ------------
@@ -437,6 +308,11 @@ int main (int argc, char** argv)
   //TString inputFile = "/gwpool/users/brivio/Hhh_1718/VBF_studies/CMSSW_7_4_7/src/KLUBAnalysis/inputFiles/JECproduction_Lug2017/allNonResClonesBench/filelist_bench_newSM.txt";
 
   cout << ".. start" << endl;
+  
+  TH1F* hTriggers = getFirstFileHisto (inputFile);
+  TH1F* hTauIDS = getFirstFileHisto (inputFile,false);
+  
+  OfflineProducerHelper oph (hTriggers, hTauIDS);
 
   TChain * bigChain = new TChain ("HTauTauTree/HTauTauTree") ;
   cout << ".. going to append to file" << endl;
@@ -455,6 +331,10 @@ int main (int argc, char** argv)
   theBigTree.fChain->SetBranchStatus("particleType", 1);
   theBigTree.fChain->SetBranchStatus("isOSCand", 1);
   theBigTree.fChain->SetBranchStatus("dz", 1);
+  theBigTree.fChain->SetBranchStatus("dxy", 1);
+  theBigTree.fChain->SetBranchStatus("discriminator", 1);
+  theBigTree.fChain->SetBranchStatus("tauID", 1);
+
   
   cout << ".. going in the loop" << endl;
 
@@ -466,18 +346,23 @@ int main (int argc, char** argv)
   
   int nTot = 0;
   int nTotGenCuts = 0;
+  
+  TH1F* nJets = new TH1F("nJets", "nJets", 20, 0, 20);
+  TH1F* nJetsAfterClean = new TH1F("nJetsAfterClean", "nJetsAfterClean", 20, 0, 20);
+  
 
   TH1F* hMbbAll = new TH1F("hMbbAll", "hMbbAll", 200, 0, 200);
-
   TH1F* hMbbMatched = new TH1F("hMbbMatched", "hMbbMatched", 200, 0, 200);
   TH1F* hMbbHMatched = new TH1F("hMbbHMatched", "hMbbHMatched", 200, 0, 200);
-
   TH1F* dPhiMatched = new TH1F("dPhiMatched", "dPhiMatched", 100, -2.*TMath::Pi(), 2.*TMath::Pi());
   TH1F* dPhiHMatched = new TH1F("dPhiHMatched", "dPhiHMatched", 100, -2.*TMath::Pi(), 2.*TMath::Pi());
+  TH1F* hGenVBFMjj = new TH1F("hGenVBFMjj", "hGenVBFMjj", 100, 0, 5000);
+  TH1F* hGenBMjj   = new TH1F("hGenBMjj", "hGenBMjj", 125, 50, 175);
+  TH1F* hGenVBFdEta = new TH1F("hGenVBFdEta", "hGenVBFdEta", 24, 0, 12);
+  TH1F* hGenBdEta   = new TH1F("hGenBdEta", "hGenBdEta", 24, 0, 12);
+
 
   int totEvts = 0;
-
-  int twoTaus = 0;
 
   int nBGen         = 0;
   int nBGenH        = 0;
@@ -487,6 +372,17 @@ int main (int argc, char** argv)
   int nbandbH      = 0;
   int nbandVBF     = 0;
   int genBVBFmatch = 0;
+  
+  int genAcceptance = 0;
+  
+  int twoTaus = 0;
+  int ntt = 0;
+  int net = 0;
+  int nmt = 0;
+  int nee = 0;
+  int nmm = 0;
+  int bho = 0;
+  int twoGoodTaus = 0;
 
   int lessThan2bJets   = 0;
   int moreThan2bJets  = 0;
@@ -516,72 +412,47 @@ int main (int argc, char** argv)
   int reco6jetsPB = 0;
   int reco6jetsEB = 0;
 
-  int twoBtoBH  = 0;
-  int twoBtoVBF = 0;
-
-  int twoCSVtoBH  = 0;
-  int twoCSVtoVBF = 0;
-  int twoPTtoBH   = 0;
-  int twoPTtoVBF  = 0;
-  int twoMJJtoBH  = 0;
-  int twoMJJtoVBF = 0;
-  int twoETAtoBH  = 0;
-  int twoETAtoVBF = 0;
   
-  int goodCSVtoBmatch = 0;
-  int goodpTtoBmatch = 0;
-  int goodMjjtoBmatch = 0;
-  int gooddEtatoBmatch = 0;
+  int dr_csv_b_1 = 0;
+  int dr_csv_vbf_1 = 0;
+  int dr_pt_b_1  = 0;
+  int dr_pt_vbf_1  = 0;
+  int dr_mjj_b_1 = 0;
+  int dr_mjj_vbf_1 = 0;
+  int dr_eta_b_1 = 0;
+  int dr_eta_vbf_1 = 0;
 
-  int VBFCSVmatch = 0;
-  int VBFpTmatch = 0;
-  int VBFMjjmatch = 0;
-  int VBFdEtamatch = 0;
+  int dr_csv_b_2 = 0;
+  int dr_csv_vbf_2 = 0;
+  int dr_pt_b_2  = 0;
+  int dr_pt_vbf_2  = 0;
+  int dr_mjj_b_2 = 0;
+  int dr_mjj_vbf_2 = 0;
+  int dr_eta_b_2 = 0;
+  int dr_eta_vbf_2 = 0;
+  
+  int dr_csv_b_3 = 0;
+  int dr_csv_vbf_3 = 0;
+  int dr_pt_b_3  = 0;
+  int dr_pt_vbf_3  = 0;
+  int dr_mjj_b_3 = 0;
+  int dr_mjj_vbf_3 = 0;
+  int dr_eta_b_3 = 0;
+  int dr_eta_vbf_3 = 0;
 
-  int goodRemainingtoBmatch = 0;
-  int VBFremainCSVmatch = 0;
-  int VBFremainMjjmatch = 0;
-  int VBFremaindEtamatch = 0;
 
   int goodEvts = 0;
-
-
-  int thth = 0;
-  int muth = 0;
-  int mumu = 0;
-  int eth  = 0;
-  int ee   = 0;
-  int bho  = 0;
 
 
   for (uint iEv = 0; true; ++iEv)
   {
     int got = theBigTree.fChain->GetEntry(iEv);
     if (got == 0) break;
-    if (iEv > 1000) break;
+    if (iEv > 20000) break;
 
     if (iEv % 1000 == 0) cout << "------------------ Event: " << iEv << " -------------------------" << endl;
 
     totEvts +=1;
-
-    // Get the two TAU LEPTONS
-    bool TausExist = false;
-    pair<int,int> daus = GetLeptonsPair (&theBigTree);
-    if (daus.first != -1)
-    {
-	TausExist = true;
-	twoTaus +=1;
-        int firstDaughterIndex  = daus.first;
-        int secondDaughterIndex = daus.second;
-        //cout << " Evt: "<< iEv <<" / Daus idxs: " << firstDaughterIndex << " - " << secondDaughterIndex << endl;
-        TLorentzVector tlv_firstLepton (theBigTree.daughters_px->at (firstDaughterIndex),theBigTree.daughters_py->at (firstDaughterIndex),theBigTree.daughters_pz->at (firstDaughterIndex),theBigTree.daughters_e->at (firstDaughterIndex));
-        TLorentzVector tlv_secondLepton (theBigTree.daughters_px->at (secondDaughterIndex),theBigTree.daughters_py->at (secondDaughterIndex),theBigTree.daughters_pz->at(secondDaughterIndex),theBigTree.daughters_e->at (secondDaughterIndex));
-    }
-    /*else
-    {
-        TLorentzVector tlv_firstLepton (-99.,-99.,-99.,-99.);
-        TLorentzVector tlv_secondLepton(-99.,-99.,-99.,-99.);
-    }*/
 
 
     // Gen Jets part
@@ -637,13 +508,54 @@ int main (int argc, char** argv)
     
     // Match VBF jets to genB
     if ( (vgenVBF1.DeltaR(vgenb1H)<0.5 && vgenVBF2.DeltaR(vgenb2H)<0.5) || (vgenVBF1.DeltaR(vgenb2H)<0.5 && vgenVBF2.DeltaR(vgenb1H)<0.5) ) genBVBFmatch +=1;;
+ 
+    if ( vgenVBF1.Pt()  < 20. ||  vgenVBF2.Pt()  < 20. || vgenb1H.Pt()  < 20. || vgenb2H.Pt()  < 20. ) continue; // genB   must have pt>20 and eta<2.4
+    if ( vgenVBF1.Eta() > 5.  ||  vgenVBF2.Eta() > 5.  || vgenb1H.Eta() > 2.4 || vgenb2H.Eta() > 2.4 ) continue; // genVBF must have pt>20 and eta<5.0
 
+    genAcceptance += 1;
+
+    hGenVBFMjj->Fill((vgenVBF1+vgenVBF2).M());
+    hGenBMjj->Fill((vgenb1H+vgenb2H).M());
+    hGenVBFdEta->Fill(TMath::Abs(vgenVBF1.Eta()-vgenVBF2.Eta()));
+    hGenBdEta->Fill(TMath::Abs(vgenb1H.Eta()-vgenb2H.Eta()));
+
+    
+    // Get the two TAU LEPTONS
+    bool TausExist = false;
+    pair<int,int> daus =  GetLeptonsPair (&theBigTree, &oph);
+    int evtType = GetEventType(&theBigTree, &oph);
+    if (daus.first == -1) continue;
+    
+    TausExist = true;
+    twoTaus +=1;
+    int firstDaughterIndex  = daus.first;
+    int secondDaughterIndex = daus.second;
+    //cout << " Evt: "<< iEv <<" / Daus idxs: " << firstDaughterIndex << " - " << secondDaughterIndex << endl;
+    TLorentzVector tlv_firstLepton (theBigTree.daughters_px->at (firstDaughterIndex),theBigTree.daughters_py->at (firstDaughterIndex),theBigTree.daughters_pz->at (firstDaughterIndex),theBigTree.daughters_e->at (firstDaughterIndex));
+    TLorentzVector tlv_secondLepton (theBigTree.daughters_px->at (secondDaughterIndex),theBigTree.daughters_py->at (secondDaughterIndex),theBigTree.daughters_pz->at(secondDaughterIndex),theBigTree.daughters_e->at (secondDaughterIndex));
+    
+    if      (evtType == 0) nmt +=1; //mutau
+    else if (evtType == 1) net +=1; //etau
+    else if (evtType == 2) ntt +=1; //tautau
+    else if (evtType == 3) nmm +=1; //mumu
+    else if (evtType == 4) nee +=1; //ee
+    else                   bho +=1; //undefined channel, should never happen
+
+    // Keep only mutau, etau, tautau evts
+    //cout << "Type: " << evtType << endl;
+    if( evtType != 0 && evtType != 1 && evtType != 2) continue;
+    twoGoodTaus +=1;
+    
 
     // --- RECO JETS PART ---
     // select the jets - note: no overlap removal for simplicity, hopefully it is a small effect
     vector<pair<float, int> > jets_and_btag;
     vector<pair<TLorentzVector, int> > jets_and_IDs;
     vector<pair<float, int> > jets_and_pt;
+    
+    // Jets tuple struture: (ijet, tlv, CSV, pt)
+    vector<tuple <int, TLorentzVector, float, float> > reco_jets;
+    vector<tuple <int, TLorentzVector, float, float> > reco_Bjets;
 
     // Loop on jets
     int nBtagMed = 0;
@@ -657,10 +569,19 @@ int main (int argc, char** argv)
             theBigTree.jets_e->at (ijet)
         );
 
-        //if (theBigTree.jets_PUJetID->at (ijet) < 0) continue;
+        // Minimum cuts: PFjetID and pT
         if (theBigTree.PFjetID->at (ijet) < 1) continue;    // 0 ; don't pass PF Jet ID; 1: loose, 2: tight, 3: tightLepVeto
         if (tlv_jet.Pt () < 20.) continue ;                 // jet_pt > 20 GeV
-        if (TMath::Abs(tlv_jet.Eta()) > 5.) continue;       // 5. for VBF jets
+        
+        // Cleaning from leptons
+        if (tlv_jet.DeltaR (tlv_firstLepton) < 0.5) continue;
+        if (tlv_jet.DeltaR (tlv_secondLepton) < 0.5) continue ;
+        
+        // CMS eta acceptance is 5. (for VBF jets) - 4.7 from AN2017-027 HTT
+        if (TMath::Abs(tlv_jet.Eta()) > 5.) continue;
+
+        reco_jets.push_back(make_tuple(ijet, tlv_jet, theBigTree.bCSVscore->at(ijet), tlv_jet.Pt()));
+
         
         // VBF jets (eta<5)
         jets_and_IDs.push_back(make_pair(tlv_jet, ijet));
@@ -671,7 +592,9 @@ int main (int argc, char** argv)
         // create vect of pairs (pt, jetID)
         jets_and_pt.push_back(make_pair(tlv_jet.Pt(), ijet));
 
-        //if (TMath::Abs(tlv_jet.Eta()) > 2.4) continue;       // 2.4 for a reasonable b-tag (2.4 is the tracker acceptance)
+        if (TMath::Abs(tlv_jet.Eta()) > 2.4) continue;       // 2.4 for a reasonable b-tag (2.4 is the tracker acceptance)
+        reco_Bjets.push_back(make_tuple(ijet, tlv_jet, theBigTree.bCSVscore->at(ijet), tlv_jet.Pt()));
+
     }
     
     // more than 2 b-jets
@@ -714,18 +637,12 @@ int main (int argc, char** argv)
     }
     else stable_sort (jets_and_pt.begin(), jets_and_pt.end());
 
+
+    nJets->Fill(jets_and_btag.size());
+
     // Clean jets from leptons dR < 0.3
     if (TausExist)
     {
-        int evt_type = GetEvtType (&theBigTree);
-        //cout << "evt_type: " << evt_type<< endl;
-        if      (evt_type == 2) thth +=1;
-        else if (evt_type == 0) muth +=1;
-        else if (evt_type == 3) mumu +=1;
-        else if (evt_type == 1) eth  +=1;
-        else if (evt_type == 4) ee   +=1;
-        else                    bho  +=1;
-    
         vector<int> toBeRemoved;
         for(int n=0; n<jets_and_IDs.size(); n++)
         {
@@ -747,21 +664,19 @@ int main (int argc, char** argv)
         {
             for (int i=0; i<toBeRemoved.size(); i++)
             {
-            for (int j=0; j<jets_and_btag.size(); j++)
-            {
-                if (jets_and_btag.at(j).second == toBeRemoved.at(i)) jets_and_btag.erase(jets_and_btag.begin() + j);
-            }
-            for (int k=0; k<jets_and_pt.size(); k++)
-            {
-                if (jets_and_pt.at(k).second == toBeRemoved.at(i)) jets_and_pt.erase(jets_and_pt.begin() + k);
-            }
-
+                for (int j=0; j<jets_and_btag.size(); j++)
+                {
+                    if (jets_and_btag.at(j).second == toBeRemoved.at(i)) jets_and_btag.erase(jets_and_btag.begin() + j);
+                }
+                for (int k=0; k<jets_and_pt.size(); k++)
+                {
+                    if (jets_and_pt.at(k).second == toBeRemoved.at(i)) jets_and_pt.erase(jets_and_pt.begin() + k);
+                }
             }
         }
-
     }
-    else
-        continue;
+
+    nJetsAfterClean->Fill(jets_and_btag.size());
 
     // ---------------------------------------------------------
     // ---------------- 4 jets in the event --------------------
@@ -853,6 +768,14 @@ int main (int argc, char** argv)
         if (dr_mjj) reco4jetsMJJ +=1;
         if (dr_eta) reco4jetsETA +=1;
 
+        if (dr_csv_b)   dr_csv_b_1 +=1;
+        if (dr_csv_vbf) dr_csv_vbf_1 +=1;
+        if (dr_pt_b)    dr_pt_b_1  +=1;
+        if (dr_pt_vbf)  dr_pt_vbf_1  +=1;
+        if (dr_mjj_b)   dr_mjj_b_1 +=1;
+        if (dr_mjj_vbf) dr_mjj_vbf_1 +=1;
+        if (dr_eta_b)   dr_eta_b_1 +=1;
+        if (dr_eta_vbf) dr_eta_vbf_1 +=1;
     }
     
     // ---------------------------------------------------------
@@ -928,6 +851,14 @@ int main (int argc, char** argv)
         TLorentzVector jet3_b_e(theBigTree.jets_px->at(ijet3_b_e),theBigTree.jets_py->at(ijet3_b_e),theBigTree.jets_pz->at(ijet3_b_e),theBigTree.jets_e->at(ijet3_b_e));
         TLorentzVector jet4_b_e(theBigTree.jets_px->at(ijet4_b_e),theBigTree.jets_py->at(ijet4_b_e),theBigTree.jets_pz->at(ijet4_b_e),theBigTree.jets_e->at(ijet4_b_e));
 
+
+        /*cout << " -*-*-*- CSV Scores -*-*-*-" << endl;
+        cout << "bjet " << ijet3_b_b << " " << ijet4_b_b <<": "<< theBigTree.bCSVscore->at(ijet3_b_b) << " " << theBigTree.bCSVscore->at(ijet4_b_b) << endl;
+        cout << "Pt   " << ijet3_b_p << " " << ijet4_b_p <<": "<< theBigTree.bCSVscore->at(ijet3_b_p) << " " << theBigTree.bCSVscore->at(ijet4_b_p) << endl;
+        cout << "Mjj  " << ijet3_b_m << " " << ijet4_b_m <<": "<< theBigTree.bCSVscore->at(ijet3_b_m) << " " << theBigTree.bCSVscore->at(ijet4_b_m) << endl;
+        cout << "dEta " << ijet3_b_e << " " << ijet4_b_e <<": "<< theBigTree.bCSVscore->at(ijet3_b_e) << " " << theBigTree.bCSVscore->at(ijet4_b_e) << endl;*/
+        
+
         // match
         bool dr_csv_b   = (jet1_b.DeltaR(vgenb1H)   <0.5 && jet2_b.DeltaR(vgenb2H)   <0.5) || (jet2_b.DeltaR(vgenb1H)   <0.5 && jet1_b.DeltaR(vgenb2H)   <0.5);
         bool dr_csv_vbf = (jet3_b_b.DeltaR(vgenVBF1)<0.5 && jet4_b_b.DeltaR(vgenVBF2)<0.5) || (jet4_b_b.DeltaR(vgenVBF1)<0.5 && jet3_b_b.DeltaR(vgenVBF2)<0.5);
@@ -950,6 +881,15 @@ int main (int argc, char** argv)
         if (dr_pt ) reco5jetsPT  +=1;
         if (dr_mjj) reco5jetsMJJ +=1;
         if (dr_eta) reco5jetsETA +=1;
+
+        if (dr_csv_b)   dr_csv_b_2+=1;
+        if (dr_csv_vbf) dr_csv_vbf_2+=1;
+        if (dr_pt_b)    dr_pt_b_2+=1;
+        if (dr_pt_vbf)  dr_pt_vbf_2+=1;
+        if (dr_mjj_b)   dr_mjj_b_2+=1;
+        if (dr_mjj_vbf) dr_mjj_vbf_2+=1;
+        if (dr_eta_b)   dr_eta_b_2+=1;
+        if (dr_eta_vbf) dr_eta_vbf_2+=1;
 
 
         // 2 VBF first - by CSV (ijet1_b, ijet2_b), by MJJ (ijet1_m, ijet2_m), by ETA (ijet1_e, ijet2_e) and by PT (ijet1_p, ijet2_p) - then the other two jets by CSV
@@ -1018,6 +958,15 @@ int main (int argc, char** argv)
         if (dr_pb) reco6jetsPB +=1;
         if (dr_eb) reco6jetsEB +=1;
 
+        if (dr_bb_b)   dr_csv_b_3+=1;
+        if (dr_bb_vbf) dr_csv_vbf_3+=1;
+        if (dr_pb_b)    dr_pt_b_3+=1;
+        if (dr_pb_vbf)  dr_pt_vbf_3+=1;
+        if (dr_mb_b)   dr_mjj_b_3+=1;
+        if (dr_mb_vbf) dr_mjj_vbf_3+=1;
+        if (dr_eb_b)   dr_eta_b_3+=1;
+        if (dr_eb_vbf) dr_eta_vbf_3+=1;
+
     }
     
     goodEvts +=1;
@@ -1027,11 +976,17 @@ int main (int argc, char** argv)
   //dPhiMatched->Write();
   //hMbbMatched->Write();
   //hMbbAll->Write();
-  hMbbAll->Write();
+  /*hMbbAll->Write();
   hMbbMatched->Write();
   hMbbHMatched->Write();
   dPhiMatched->Write();
-  dPhiHMatched->Write();
+  dPhiHMatched->Write();*/
+  /*hGenVBFMjj ->Write();
+  hGenBMjj   ->Write();
+  hGenVBFdEta->Write();
+  hGenBdEta->Write();*/
+  nJets->Write();
+  nJetsAfterClean->Write();
 
   /*cout << "DONE" << endl;
   cout << "percentage good selected             : " << 100.*nGoodSelected/nTot << endl;
@@ -1044,67 +999,74 @@ int main (int argc, char** argv)
   cout << "---" << endl;
   cout << "Less/more than 2 genB, genBH, notSameH, genVBF: " << nBGen <<" ("<< 100.*nBGen/totEvts <<"%) - " << nBGenH <<" ("<< 100.*nBGenH/totEvts <<"%) - "
   << nMothersMatch <<" ("<< 100.*nMothersMatch/totEvts <<"%) - "<< nGenVBF <<" ("<< 100.*nGenVBF/totEvts <<"%)"<< endl;
+  cout << "Gen in detect acceptance     : " << genAcceptance <<" ("<<100.*genAcceptance/totEvts << "%)"<<endl;
   cout << "---" << endl;
-  cout << " evts with 2 good taus       : " << twoTaus <<" ("<< 100.*twoTaus/totEvts <<"%)"<<endl;
-  cout << "thth  :" << thth <<" ("<< 100.*thth/twoTaus <<"%)"<<endl;
-  cout << "muth  :" << muth <<" ("<< 100.*muth/twoTaus <<"%)"<<endl;
-  cout << "eth   :" << eth  <<" ("<< 100.*eth/twoTaus <<"%)"<<endl;
-  cout << "mumu  :" << mumu <<" ("<< 100.*mumu/twoTaus <<"%)"<<endl;
-  cout << "ee    :" << ee   <<" ("<< 100.*ee/twoTaus <<"%)"<<endl;
-  cout << "bho   :" << bho  <<" ("<< 100.*bho/twoTaus <<"%)"<<endl;
+  cout << "Evts with 2 good taus       : " << twoTaus <<" ("<< 100.*twoTaus/genAcceptance <<"%)"<<endl;
+  cout << " mutau                      : " << nmt << " ("<< 100.*nmt/twoTaus <<"%)"<<endl;
+  cout << " etau                       : " << net << " ("<< 100.*net/twoTaus <<"%)"<<endl;
+  cout << " tautau                     : " << ntt << " ("<< 100.*ntt/twoTaus <<"%)"<<endl;
+  cout << " mumu                       : " << nmm << " ("<< 100.*nmm/twoTaus <<"%)"<<endl;
+  cout << " ee                         : " << nee << " ("<< 100.*nee/twoTaus <<"%)"<<endl;
+  cout << " bho                        : " << bho << " ("<< 100.*bho/twoTaus <<"%)"<<endl;
+  cout << " Good channels (mt,et,tt)   : " << twoGoodTaus << " ("<<100.*twoGoodTaus/twoTaus <<"%)"<<endl;
   cout << "---" << endl;
-  /*cout << "genB and genBH matching      : " << nbandbH <<" ("<< 100.*nbandbH/totEvts <<"%)"<< endl;
-  cout << "genB and genVBF are the same : " << nbandVBF <<" ("<< 100.*nbandVBF/totEvts <<"%)"<< endl;
-  cout << "genVBF and genB matched      : " << genBVBFmatch <<" ("<< 100.*genBVBFmatch/totEvts <<"%)"<< endl;*/
-  //cout << "---" << endl;
-  //cout << "Less than 2 reco jets        : " << lessThan2bJets <<" ("<< 100.*lessThan2bJets/totEvts <<"%)"<< endl;
-  cout << "  - After cleaning -" << endl;
-  cout << "Less than 4 reco jets        : " << less4recoJets <<" ("<<100.*less4recoJets/totEvts <<"%)"<<endl;
-  cout << "Exactly   4 reco jets        : " << exactly4recoJets <<" ("<<100.*exactly4recoJets/totEvts <<"%)"<<endl;
-  cout << "More than 4 reco jets        : " << more4recoJets <<" ("<<100.*more4recoJets/totEvts <<"%)"<<endl;
+  cout << "  - After Tau Cleaning -" << endl;
+  cout << "Less than 4 reco jets        : " << less4recoJets <<" ("<<100.*less4recoJets/twoGoodTaus <<"%)"<<endl;
+  cout << "Exactly   4 reco jets        : " << exactly4recoJets <<" ("<<100.*exactly4recoJets/twoGoodTaus <<"%)"<<endl;
+  cout << "More than 4 reco jets        : " << more4recoJets <<" ("<<100.*more4recoJets/twoGoodTaus <<"%)"<<endl;
   cout << "---" << endl;
   int goodRecoJets = exactly4recoJets + more4recoJets;
   cout << "   - Only 4 reco jets -" << endl;
   cout << " chose 2b   by CSV           : " << reco4jetsCSV << " ("<<100.*reco4jetsCSV/exactly4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_csv_b_1 << " ("<<100.*dr_csv_b_1/exactly4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_csv_vbf_1 << " ("<<100.*dr_csv_vbf_1/exactly4recoJets <<"%)"<<endl;
+
   cout << " chose 2vbf by PT            : " << reco4jetsPT << " ("<<100.*reco4jetsPT/exactly4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_pt_b_1 << " ("<<100.*dr_pt_b_1/exactly4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_pt_vbf_1 << " ("<<100.*dr_pt_vbf_1/exactly4recoJets <<"%)"<<endl;
+  
   cout << " chose 2vbf by MJJ           : " << reco4jetsMJJ << " ("<<100.*reco4jetsMJJ/exactly4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_mjj_b_1 << " ("<<100.*dr_mjj_b_1/exactly4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_mjj_vbf_1 << " ("<<100.*dr_mjj_vbf_1/exactly4recoJets <<"%)"<<endl;
+  
   cout << " chose 2vbf by ETA           : " << reco4jetsETA << " ("<<100.*reco4jetsETA/exactly4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_eta_b_1 << " ("<<100.*dr_eta_b_1/exactly4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_eta_vbf_1 << " ("<<100.*dr_eta_vbf_1/exactly4recoJets <<"%)"<<endl;
   cout << "---"<<endl;
   cout << "   -- More than 4 reco jets --" << endl;
   cout << "Chose 2b first by CSV then 2vbf by:"<< endl;
   cout << "  CSV                        : " << reco5jetsCSV << " ("<<100.*reco5jetsCSV/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_csv_b_2 << " ("<<100.*dr_csv_b_2/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_csv_vbf_2 << " ("<<100.*dr_csv_vbf_2/more4recoJets <<"%)"<<endl;
   cout << "  PT                         : " << reco5jetsPT << " ("<<100.*reco5jetsPT/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_pt_b_2 << " ("<<100.*dr_pt_b_2/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_pt_vbf_2 << " ("<<100.*dr_pt_vbf_2/more4recoJets <<"%)"<<endl;
+
   cout << "  MJJ                        : " << reco5jetsMJJ << " ("<<100.*reco5jetsMJJ/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_mjj_b_2 << " ("<<100.*dr_mjj_b_2/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_mjj_vbf_2 << " ("<<100.*dr_mjj_vbf_2/more4recoJets <<"%)"<<endl;
+  
   cout << "  ETA                        : " << reco5jetsETA << " ("<<100.*reco5jetsETA/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_eta_b_2 << " ("<<100.*dr_eta_b_2/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_eta_vbf_2 << " ("<<100.*dr_eta_vbf_2/more4recoJets <<"%)"<<endl;
   cout << "Chose 2vbf (csv,pt,mjj,eta) first then 2b (csv):"<< endl;
   cout << "  CSV                        : " << reco6jetsBB << " ("<<100.*reco6jetsBB/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_csv_b_3 << " ("<<100.*dr_csv_b_3/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_csv_vbf_3 << " ("<<100.*dr_csv_vbf_3/more4recoJets <<"%)"<<endl;
+  
   cout << "  PT                         : " << reco6jetsPB << " ("<<100.*reco6jetsPB/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_pt_b_3 << " ("<<100.*dr_pt_b_3/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_pt_vbf_3 << " ("<<100.*dr_pt_vbf_3/more4recoJets <<"%)"<<endl;
+  
   cout << "  MJJ                        : " << reco6jetsMB << " ("<<100.*reco6jetsMB/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_mjj_b_3 << " ("<<100.*dr_mjj_b_3/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_mjj_vbf_3 << " ("<<100.*dr_mjj_vbf_3/more4recoJets <<"%)"<<endl;
+  
   cout << "  ETA                        : " << reco6jetsEB << " ("<<100.*reco6jetsEB/more4recoJets <<"%)"<<endl;
+  cout << "    b-only                     : " << dr_eta_b_3 << " ("<<100.*dr_eta_b_3/more4recoJets <<"%)"<<endl;
+  cout << "    vbf-only                   : " << dr_eta_vbf_3 << " ("<<100.*dr_eta_vbf_3/more4recoJets <<"%)"<<endl;
   cout << "---" << endl;
-  /*cout << "---" << endl;
-  cout << " - eff over all evts with >= 4 jets -" << endl;
-  cout << "   - Only 4 reco jets -" << endl;
-  cout << " chose 2b   by CSV           : " << reco4jetsCSV << " ("<<100.*reco4jetsCSV/goodRecoJets <<"%)"<<endl;
-  cout << " chose 2vbf by PT            : " << reco4jetsPT << " ("<<100.*reco4jetsPT/goodRecoJets <<"%)"<<endl;
-  cout << " chose 2vbf by MJJ           : " << reco4jetsMJJ << " ("<<100.*reco4jetsMJJ/goodRecoJets <<"%)"<<endl;
-  cout << " chose 2vbf by ETA           : " << reco4jetsETA << " ("<<100.*reco4jetsETA/goodRecoJets <<"%)"<<endl;
-  cout << "---"<<endl;
-  cout << "   -- More than 4 reco jets --" << endl;
-  cout << "Chose 2b first by CSV then 2vbf by:"<< endl;
-  cout << "  CSV                        : " << reco5jetsCSV << " ("<<100.*reco5jetsCSV/goodRecoJets <<"%)"<<endl;
-  cout << "  PT                         : " << reco5jetsPT << " ("<<100.*reco5jetsPT/goodRecoJets <<"%)"<<endl;
-  cout << "  MJJ                        : " << reco5jetsMJJ << " ("<<100.*reco5jetsMJJ/goodRecoJets <<"%)"<<endl;
-  cout << "  ETA                        : " << reco5jetsETA << " ("<<100.*reco5jetsETA/goodRecoJets <<"%)"<<endl;
-  cout << "Chose 2vbf (csv,pt,mjj,eta) first then 2b (csv):"<< endl;
-  cout << "  CSV                        : " << reco6jetsBB << " ("<<100.*reco6jetsBB/goodRecoJets <<"%)"<<endl;
-  cout << "  PT                         : " << reco6jetsPB << " ("<<100.*reco6jetsPB/goodRecoJets <<"%)"<<endl;
-  cout << "  MJJ                        : " << reco6jetsMB << " ("<<100.*reco6jetsMB/goodRecoJets <<"%)"<<endl;
-  cout << "  ETA                        : " << reco6jetsEB << " ("<<100.*reco6jetsEB/goodRecoJets <<"%)"<<endl;
-  cout << "---" << endl;
-  cout << "---" << endl;*/
   cout << "Total good events (>=4 jets) : " << goodRecoJets <<" ("<< 100.*goodRecoJets/totEvts <<"%)"<< endl;
 }
-
 
 
