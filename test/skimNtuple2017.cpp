@@ -2320,10 +2320,10 @@ int main (int argc, char** argv)
       double unc_MESup_second;
       double unc_MESdw_second;
 
-      unc_MESup_first = theBigTree.daughters_MESshiftup->at (firstDaughterIndex); // first daughter, DM 0
-      unc_MESdw_first = theBigTree.daughters_MESshiftdw->at (firstDaughterIndex); // first daughter, DM 0
-      unc_MESup_second = theBigTree.daughters_MESshiftup ->at (secondDaughterIndex); // second daughter, DM 0
-      unc_MESdw_second = theBigTree.daughters_MESshiftdw ->at (secondDaughterIndex); // second daughter, DM 0
+      unc_MESup_first = theBigTree.daughters_MESshiftup->at (firstDaughterIndex); // first daughter, up
+      unc_MESdw_first = theBigTree.daughters_MESshiftdw->at (firstDaughterIndex); // first daughter, dw
+      unc_MESup_second = theBigTree.daughters_MESshiftup ->at (secondDaughterIndex); // second daughter, up
+      unc_MESdw_second = theBigTree.daughters_MESshiftdw ->at (secondDaughterIndex); // second daughter, dw
       
       TLorentzVector tlv_firstLepton_muup    =tlv_firstLepton; 
       TLorentzVector tlv_firstLepton_mudown  =tlv_firstLepton; 
