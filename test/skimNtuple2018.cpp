@@ -5704,7 +5704,7 @@ int main (int argc, char** argv)
     int DNN_nleps, DNN_nbjetscand;
 
     Channel DNN_e_channel;
-    Year DNN_e_year(y17);
+    Year DNN_e_year(y18);
     Spin DNN_spin(nonres);
     float DNN_klambda;
     float DNN_res_mass = 125.; // FIXME
